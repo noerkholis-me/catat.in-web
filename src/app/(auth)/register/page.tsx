@@ -3,14 +3,17 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
-import { loginSchema, type LoginFormData } from "@/lib/schemas/auth.schema";
+import {
+  registerSchema,
+  type RegisterFormData,
+} from "@/lib/schemas/auth.schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 import { ROUTES, APP_NAME } from "@/lib/constants";
 import { toast } from "sonner";
-import Link from "next/link";
 import {
   Form,
   FormControl,
@@ -19,31 +22,35 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-export default function LoginPage() {
-  const { login, isLoading } = useAuth();
+export default function RegisterPage() {
+  const { register: registerUser, isLoading } = useAuth();
 
-  console.log(isLoading);
-
-  const form = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
+      fullName: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: RegisterFormData) => {
     try {
-      await login({ email: data.email, password: data.password });
-      toast.success("Login berhasil!", {
-        description: "Selamat datang kembali",
+      await registerUser({
+        email: data.email,
+        password: data.password,
+        fullName: data.fullName,
+        confirmPassword: data.confirmPassword,
+      });
+      toast.success("Akun berhasil dibuat!", {
+        description: "Selamat datang di Catat.in",
       });
     } catch (err: any) {
-      toast.error("Login gagal", {
-        description: err.response?.data?.message || "Email atau password salah",
+      toast.error("Pendaftaran gagal", {
+        description:
+          err.response?.data?.message || "Terjadi kesalahan saat mendaftar",
       });
-
-      console.log(err);
     }
   };
 
@@ -52,10 +59,10 @@ export default function LoginPage() {
       {/* Header */}
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-semibold tracking-tight">
-          Masuk ke {APP_NAME}
+          Mulai dengan {APP_NAME}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Lanjutkan tracking pengeluaranmu
+          Buat akun untuk tracking pengeluaran yang lebih smart
         </p>
       </div>
 
@@ -63,6 +70,31 @@ export default function LoginPage() {
       <div className="rounded-lg border bg-card p-6 shadow-sm">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="fullName" className="text-sm font-medium">
+                Nama Lengkap
+              </Label>
+              <FormField
+                name="fullName"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        id="fullName"
+                        type="text"
+                        placeholder="Budi Santoso"
+                        disabled={isLoading}
+                        className="h-10"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
                 Email
@@ -77,7 +109,7 @@ export default function LoginPage() {
                         {...field}
                         id="email"
                         type="email"
-                        placeholder="Enter your email address"
+                        placeholder="nama@example.com"
                         disabled={isLoading}
                         className="h-10"
                       />
@@ -113,6 +145,31 @@ export default function LoginPage() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                Konfirmasi Password
+              </Label>
+              <FormField
+                name="confirmPassword"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        id="password"
+                        type="password"
+                        placeholder="Ulangi password"
+                        disabled={isLoading}
+                        className="h-10"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <Button type="submit" className="w-full h-10" disabled={isLoading}>
               {isLoading ? (
                 <>
@@ -120,7 +177,7 @@ export default function LoginPage() {
                   Memproses...
                 </>
               ) : (
-                "Masuk"
+                "Buat Akun"
               )}
             </Button>
           </form>
@@ -129,12 +186,12 @@ export default function LoginPage() {
 
       {/* Footer */}
       <div className="text-center text-sm">
-        <span className="text-muted-foreground">Belum punya akun? </span>
+        <span className="text-muted-foreground">Sudah punya akun? </span>
         <Link
-          href={ROUTES.REGISTER}
+          href={ROUTES.LOGIN}
           className="font-medium underline underline-offset-4 hover:text-primary"
         >
-          Daftar sekarang
+          Masuk
         </Link>
       </div>
     </div>

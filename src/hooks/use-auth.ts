@@ -1,7 +1,8 @@
-import { ROUTES } from "@/lib/constants";
-import { LoginFormData, RegisterFormData } from "@/lib/schemas/auth.schema";
-import { useAuthStore } from "@/lib/stores/auth-store";
-import { useRouter } from "next/navigation";
+import { ROUTES } from '@/lib/constants';
+import { LoginFormData, RegisterFormData } from '@/lib/schemas/auth.schema';
+import { useAuthStore } from '@/lib/stores/auth-store';
+import { redirect, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export function useAuth() {
   const router = useRouter();
@@ -26,12 +27,12 @@ export function useAuth() {
     password,
   }: RegisterFormData) => {
     await register(email, password, fullName);
-    // router.push(ROUTES.DASHBOARD);
+    router.push(ROUTES.DASHBOARD);
   };
 
   const handleLogout = () => {
     logout();
-    router.push(ROUTES.LOGIN);
+    router.push(ROUTES.LOGIN, { scroll: true });
   };
 
   return {

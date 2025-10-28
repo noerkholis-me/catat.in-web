@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 // @ts-ignore - allow global CSS side-effect import without type declarations
 import "./globals.css";
+import { SessionMonitor } from "@/components/auth/session-monitor";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning className="dark scheme-dark">
       <body className={inter.className}>
+        <SessionMonitor />
         {children}
         <Toaster
           position="top-center"

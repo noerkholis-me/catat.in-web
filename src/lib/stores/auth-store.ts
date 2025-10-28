@@ -2,12 +2,14 @@ import { User } from "@/types/auth";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { authApi } from "../api/auth";
+import apiClient from "../api/client";
 
 interface AuthState {
   user: User | null;
-  accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
+  error: string | null;
 
   login: (email: string, password: string) => Promise<void>;
   register: (
@@ -15,8 +17,9 @@ interface AuthState {
     password: string,
     fullName: string
   ) => Promise<void>;
-  logout: () => void;
-  setUser: (user: User) => void;
+  logout: () => Promise<void>;
+  refreshToken: () => Promise<void>;
+  setUser: (user: User | null) => void;
   initializeAuth: () => Promise<void>;
 }
 
@@ -24,91 +27,103 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      accessToken: null,
       isAuthenticated: false,
       isLoading: false,
-
-      setUser: (user: User) => {
-        set({ user });
-      },
+      isInitialized: false,
+      error: null,
 
       login: async (email: string, password: string) => {
+        set({ isLoading: true, error: null });
+
         try {
-          set({ isLoading: true });
-          const response = await authApi.login({ email, password });
-
-          localStorage.setItem("accessToken", response.accessToken);
-
-          set({
-            user: response.user,
-            accessToken: response.accessToken,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-        } catch (error) {
+          await authApi.login({ email, password });
+          const response = await authApi.getCurrentUser();
+          set({ user: response.user, isAuthenticated: true });
+        } catch (err: any) {
+          set({ error: err.response?.data?.message || "Login failed" });
+          console.log("error useAuthStore : ", err);
+          throw err;
+        } finally {
           set({ isLoading: false });
-          console.log("error useAuthStore : ", error);
-          throw error;
         }
       },
 
       register: async (email: string, password: string, fullName: string) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true });
-          const response = await authApi.register({
-            email,
-            password,
-            fullName,
-          });
+          await authApi.register({ email, password, fullName });
+          const response = await authApi.getCurrentUser();
+          set({ user: response.user, isAuthenticated: true });
+        } catch (err: any) {
+          set({ error: err.response?.data?.message || "Register failed" });
+          throw err;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
 
-          localStorage.setItem("accessToken", response.accessToken);
+      logout: async () => {
+        set({ isLoading: true });
+        try {
+          await authApi.logout();
+          set({ user: null, isAuthenticated: false });
+        } catch (err) {
+          console.error("Logout error", err);
+          throw err;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
 
+      refreshToken: async () => {
+        try {
+          await authApi.refresh();
+          // After refresh, get updated user data
+          const user = await authApi.getProfile();
           set({
-            user: response.user,
-            accessToken: response.accessToken,
+            user,
             isAuthenticated: true,
-            isLoading: false,
           });
         } catch (error) {
-          set({ isLoading: false });
+          // Refresh failed, clear auth state
+          set({
+            user: null,
+            isAuthenticated: false,
+          });
           throw error;
         }
       },
 
-      logout: () => {
-        localStorage.removeItem("accessToken");
+      setUser: (user: User | null) => {
         set({
-          user: null,
-          accessToken: null,
-          isAuthenticated: false,
+          user,
+          isAuthenticated: !!user,
         });
       },
 
       initializeAuth: async () => {
-        const token = localStorage.getItem("accessToken");
-
-        if (!token) {
-          set({ isAuthenticated: false, isLoading: false });
-          return;
-        }
+        // Skip if already initialized
+        if (get().isInitialized) return;
 
         try {
           set({ isLoading: true });
+
+          // Try to get profile (will trigger refresh if needed)
           const response = await authApi.getProfile();
 
           set({
             user: response,
-            accessToken: token,
             isAuthenticated: true,
             isLoading: false,
+            isInitialized: true,
           });
         } catch (error) {
-          localStorage.removeItem("accessToken");
+          // Auth check failed (no valid token)
           set({
             user: null,
-            accessToken: null,
             isAuthenticated: false,
             isLoading: false,
+            isInitialized: true,
           });
         }
       },
@@ -117,8 +132,6 @@ export const useAuthStore = create<AuthState>()(
       name: "auth-storage",
       partialize: (state) => ({
         user: state.user,
-        accessToken: state.accessToken,
-        isAuthenticated: state.isAuthenticated,
       }),
     }
   )
