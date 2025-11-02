@@ -1,13 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { expenseSchema, ExpenseFormData } from '@/lib/schemas/expense.schema';
-import { expensesApi } from '@/lib/api/expenses';
-import { categoriesApi } from '@/lib/api/categories';
-import { budgetsApi } from '@/lib/api/budgets';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,7 +30,6 @@ import { toast } from 'sonner';
 import { ROUTES, PAYMENT_METHODS } from '@/lib/constants';
 import Link from 'next/link';
 import { Category } from '@/types/expense';
-import { Budget } from '@/types/budget';
 import {
   Form,
   FormControl,
@@ -42,13 +38,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Field, FieldError, FieldGroup } from '@/components/ui/field';
+import { useCreateExpense } from '@/features/expenses/api/use-create-expense';
+import { useGetCategories } from '@/features/categories/api/use-get-categories';
+import { useGetBudgets } from '@/features/budgets/api/use-get-budgets';
 
 export default function AddExpensePage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
 
   const form = useForm({
     resolver: zodResolver(expenseSchema),
@@ -63,67 +59,35 @@ export default function AddExpensePage() {
   const amount = form.watch('amount');
   const quantity = form.watch('quantity');
 
-  // Load categories and budgets
-  useEffect(() => {
-    loadInitialData();
-  }, []);
+  const { data: categories, isPending: isLoadingCategories } =
+    useGetCategories();
+  const { data: budgets, isPending: isLoadingBudgets } = useGetBudgets();
+  const { mutate: createExpense } = useCreateExpense({
+    mutationConfig: {
+      onSuccess: (data) => {
+        setIsLoading(true);
+        toast.success('Pengeluaran berhasil ditambahkan!', {
+          description: `${data.name} - ${formatCurrency(Number(data.amount))}`,
+        });
+        router.push(ROUTES.EXPENSES);
+      },
 
-  const loadInitialData = async () => {
-    try {
-      const [categoriesData, budgetsData] = await Promise.all([
-        categoriesApi.getAll(),
-        budgetsApi.getAll(),
-      ]);
-
-      setCategories(categoriesData);
-      setBudgets(budgetsData);
-
-      // Auto-select current month budget if exists
-      const currentBudget = await budgetsApi.getCurrentMonth();
-      if (currentBudget) {
-        form.setValue('budgetId', currentBudget.id);
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast.error('Gagal memuat data', {
-        description: 'Silakan refresh halaman',
-      });
-    } finally {
-      setLoadingData(false);
-    }
-  };
+      onError: (error: any) => {
+        toast.error('Gagal menambahkan pengeluaran', {
+          description: error.response?.data?.message || 'Terjadi kesalahan',
+        });
+        setIsLoading(false);
+      },
+    },
+  });
 
   const onSubmit = async (data: ExpenseFormData) => {
-    try {
-      setIsLoading(true);
-
-      await expensesApi.create({
-        ...data,
-        amount: Number(data.amount),
-        quantity: data.quantity || 1,
-      });
-
-      toast.success('Pengeluaran berhasil ditambahkan!', {
-        description: `${data.name} - ${formatCurrency(Number(data.amount))}`,
-      });
-
-      router.push(ROUTES.EXPENSES);
-    } catch (error: any) {
-      toast.error('Gagal menambahkan pengeluaran', {
-        description: error.response?.data?.message || 'Terjadi kesalahan',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    createExpense({
+      ...data,
+      amount: Number(data.amount),
+      quantity: data.quantity || 1,
+    });
   };
-
-  if (loadingData) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -282,22 +246,45 @@ export default function AddExpensePage() {
                           value={field.value}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Pilih kategori" />
+                            <SelectValue
+                              placeholder={
+                                isLoadingCategories
+                                  ? 'Memuat kategori...'
+                                  : 'Pilih kategori'
+                              }
+                            />
                           </SelectTrigger>
                           <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category.id} value={category.id}>
-                                <div className="flex items-center gap-2">
-                                  {category.icon && (
-                                    <span>{category.icon}</span>
-                                  )}
-                                  <span>{category.name}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    ({category.type})
-                                  </span>
-                                </div>
+                            {isLoadingCategories ? (
+                              <SelectItem
+                                value="spin"
+                                disabled
+                                className="flex items-center justify-center p-1.5 text-center"
+                              >
+                                <Loader2 className="h-6 w-6 animate-spin" />
                               </SelectItem>
-                            ))}
+                            ) : categories && categories.length > 0 ? (
+                              categories.map((category) => (
+                                <SelectItem
+                                  key={category.id}
+                                  value={category.id}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    {category.icon && (
+                                      <span>{category.icon}</span>
+                                    )}
+                                    <span>{category.name}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      ({category.type})
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="Tidak ada kategori" disabled>
+                                Tidak ada kategori
+                              </SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                         {fieldState.invalid && (
@@ -397,10 +384,10 @@ export default function AddExpensePage() {
                           <SelectValue placeholder="Pilih budget" />
                         </SelectTrigger>
                         <SelectContent>
-                          {budgets.map((budget) => (
+                          {budgets?.map((budget) => (
                             <SelectItem key={budget.id} value={budget.id}>
-                              {budget.month}/{budget.year} -{' '}
-                              {formatCurrency(budget.totalIncome)}
+                              {budget?.month}/{budget?.year} -{' '}
+                              {formatCurrency(budget?.totalIncome)}
                             </SelectItem>
                           ))}
                         </SelectContent>
