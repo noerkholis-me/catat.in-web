@@ -4,7 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { expenseSchema, ExpenseFormData } from '@/lib/schemas/expense.schema';
+import {
+  expenseSchema,
+  ExpenseFormData,
+} from '@/features/expenses/schemas/expense.schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,7 +32,7 @@ import { ArrowLeft, CalendarIcon, Loader2, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ROUTES, PAYMENT_METHODS } from '@/lib/constants';
 import Link from 'next/link';
-import { Category } from '@/types/expense';
+import { Category } from '@/features/expenses/types/expense';
 import {
   Form,
   FormControl,
@@ -41,6 +44,7 @@ import { Field, FieldError, FieldGroup } from '@/components/ui/field';
 import { useCreateExpense } from '@/features/expenses/api/use-create-expense';
 import { useGetCategories } from '@/features/categories/api/use-get-categories';
 import { useGetBudgets } from '@/features/budgets/api/use-get-budgets';
+import { useGetExpenses } from '@/features/expenses/api/use-get-expenses';
 
 export default function AddExpensePage() {
   const router = useRouter();
@@ -62,6 +66,10 @@ export default function AddExpensePage() {
   const { data: categories, isPending: isLoadingCategories } =
     useGetCategories();
   const { data: budgets, isPending: isLoadingBudgets } = useGetBudgets();
+  const { data: expenses, isLoading: isLoadingGetExpenses } = useGetExpenses({
+    expenseQueryParams: { page: 1 },
+  });
+
   const { mutate: createExpense } = useCreateExpense({
     mutationConfig: {
       onSuccess: (data) => {
@@ -185,7 +193,6 @@ export default function AddExpensePage() {
                               {...field}
                               id="quantity"
                               type="number"
-                              step="0.01"
                               placeholder="1"
                               className="flex-1"
                               onChange={(e) =>

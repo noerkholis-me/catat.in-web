@@ -1,8 +1,8 @@
-import { User } from "@/types/auth";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { authApi } from "../api/auth";
-import apiClient from "../api/client";
+import { User } from '@/types/auth';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { authApi } from '../api/auth';
+import apiClient from '../api/client';
 
 interface AuthState {
   user: User | null;
@@ -40,8 +40,8 @@ export const useAuthStore = create<AuthState>()(
           const response = await authApi.getCurrentUser();
           set({ user: response.user, isAuthenticated: true });
         } catch (err: any) {
-          set({ error: err.response?.data?.message || "Login failed" });
-          console.log("error useAuthStore : ", err);
+          set({ error: err.response?.data?.message || 'Login failed' });
+          console.log('error useAuthStore : ', err);
           throw err;
         } finally {
           set({ isLoading: false });
@@ -55,7 +55,7 @@ export const useAuthStore = create<AuthState>()(
           const response = await authApi.getCurrentUser();
           set({ user: response.user, isAuthenticated: true });
         } catch (err: any) {
-          set({ error: err.response?.data?.message || "Register failed" });
+          set({ error: err.response?.data?.message || 'Register failed' });
           throw err;
         } finally {
           set({ isLoading: false });
@@ -68,7 +68,7 @@ export const useAuthStore = create<AuthState>()(
           await authApi.logout();
           set({ user: null, isAuthenticated: false });
         } catch (err) {
-          console.error("Logout error", err);
+          console.error('Logout error', err);
           throw err;
         } finally {
           set({ isLoading: false });
@@ -103,7 +103,7 @@ export const useAuthStore = create<AuthState>()(
 
       initializeAuth: async () => {
         // Skip if already initialized
-        if (get().isInitialized) return;
+        // if (get().isInitialized) return;
 
         try {
           set({ isLoading: true });
@@ -129,7 +129,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: "auth-storage",
+      name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
       }),

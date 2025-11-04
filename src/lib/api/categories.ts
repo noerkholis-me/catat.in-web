@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { Category } from '@/types/expense';
+import { Category } from '@/features/expenses/types/expense';
 
 interface CreateCategoryRequest {
   name: string;

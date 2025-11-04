@@ -7,21 +7,28 @@ export interface Category {
   isSystem: boolean;
 }
 
+export interface BudgetSummary {
+  id: string;
+  month: number;
+  year: number;
+}
+
 export interface Expense {
   id: string;
   name: string;
   amount: number;
   quantity: number;
-  unit?: string;
+  unit?: string | null;
   expenseDate: string;
-  expenseTime?: string;
-  notes?: string;
-  location?: string;
-  paymentMethod?: string;
-  receiptUrl?: string;
+  expenseTime?: string | null;
+  notes?: string | null;
+  location?: string | null;
+  paymentMethod?: string | null;
+  receiptUrl?: string | null;
   isGroup: boolean;
   category: Category;
-  childExpenses?: Expense[];
+  budget?: BudgetSummary | null;
+  childExpenses?: Expense[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,3 +49,5 @@ export interface CreateExpenseRequest {
   parentExpenseId?: string;
   isGroup?: boolean;
 }
+
+export interface UpdateExpenseRequest extends Partial<CreateExpenseRequest> {}

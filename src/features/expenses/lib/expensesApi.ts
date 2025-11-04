@@ -1,8 +1,12 @@
-import apiClient from './client';
-import { Expense, CreateExpenseRequest } from '@/types/expense';
+import {
+  Expense,
+  CreateExpenseRequest,
+  UpdateExpenseRequest,
+} from '@/features/expenses/types/expense';
+import apiClient from '@/lib/api/client';
 import { PaginatedResponse } from '@/types/api';
 
-interface ExpenseQueryParams {
+export interface ExpenseQueryParams {
   startDate?: string;
   endDate?: string;
   categoryId?: string;
@@ -19,6 +23,8 @@ export const expensesApi = {
       '/expenses',
       { params }
     );
+
+    console.log('response ori ==> ', response);
     return response.data;
   },
 
@@ -51,10 +57,7 @@ export const expensesApi = {
     return response.data;
   },
 
-  update: async (
-    id: string,
-    data: Partial<CreateExpenseRequest>
-  ): Promise<Expense> => {
+  update: async (data: UpdateExpenseRequest, id: string): Promise<Expense> => {
     const response = await apiClient.patch<Expense>(`/expenses/${id}`, data);
     return response.data;
   },

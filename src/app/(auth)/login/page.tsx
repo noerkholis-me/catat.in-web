@@ -1,50 +1,38 @@
-"use client";
+'use client';
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@/hooks/use-auth";
-import { loginSchema, type LoginFormData } from "@/lib/schemas/auth.schema";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
-import { ROUTES, APP_NAME } from "@/lib/constants";
-import { toast } from "sonner";
-import Link from "next/link";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useAuth } from '@/hooks/use-auth';
+import { loginSchema, type LoginFormData } from '@/lib/schemas/auth.schema';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Loader2 } from 'lucide-react';
+import { ROUTES, APP_NAME } from '@/lib/constants';
+import { toast } from 'sonner';
+import Link from 'next/link';
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form";
+} from '@/components/ui/form';
+import { useLogin } from '@/features/auth/api/use-login';
 
 export default function LoginPage() {
-  const { login, isLoading } = useAuth();
-
-  console.log(isLoading);
-
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
-    try {
-      await login({ email: data.email, password: data.password });
-      toast.success("Login berhasil!", {
-        description: "Selamat datang kembali",
-      });
-    } catch (err: any) {
-      toast.error("Login gagal", {
-        description: err.response?.data?.message || "Email atau password salah",
-      });
+  const { mutate: login, isPending: isLoading } = useLogin();
 
-      console.log(err);
-    }
+  const onSubmit = async (data: LoginFormData) => {
+    login({ email: data.email, password: data.password });
   };
 
   return (
@@ -120,7 +108,7 @@ export default function LoginPage() {
                   Memproses...
                 </>
               ) : (
-                "Masuk"
+                'Masuk'
               )}
             </Button>
           </form>

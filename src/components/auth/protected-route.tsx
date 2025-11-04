@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { redirect, useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/stores/auth-store";
-import { ROUTES } from "@/lib/constants";
-import { Loader2 } from "lucide-react";
+import { useEffect } from 'react';
+import { redirect, useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/stores/auth-store';
+import { ROUTES } from '@/lib/constants';
+import { Loader2 } from 'lucide-react';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -25,7 +25,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  console.log("isAuthenticated", isAuthenticated);
+  console.log('isAuthenticated', isAuthenticated);
 
   if (isLoading) {
     return (

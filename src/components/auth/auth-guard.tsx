@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { ROUTES } from "@/lib/constants";
-import { useAuthStore } from "@/lib/stores/auth-store";
-import { Loader2 } from "lucide-react";
-import { redirect, RedirectType, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { ROUTES } from '@/lib/constants';
+import { useAuthStore } from '@/lib/stores/auth-store';
+import { Loader2 } from 'lucide-react';
+import { redirect, RedirectType, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -19,8 +19,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isInitialized && isAuthenticated) {
-      redirect(ROUTES.DASHBOARD);
-      //   router.push(ROUTES.DASHBOARD);
+      router.push(ROUTES.DASHBOARD);
     }
   }, [isAuthenticated, isInitialized]);
 

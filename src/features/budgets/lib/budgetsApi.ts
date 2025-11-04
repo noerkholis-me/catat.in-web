@@ -1,5 +1,5 @@
-import { Budget, CreateBudgetRequest } from '@/types/budget';
-import apiClient from './client';
+import { Budget, CreateBudgetRequest } from '@/features/budgets/types/budget';
+import apiClient from '@/lib/api/client';
 
 export const budgetsApi = {
   getAll: async (): Promise<Budget[]> => {

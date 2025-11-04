@@ -1,6 +1,6 @@
-import { budgetsApi } from '@/lib/api/budgets';
 import { QueryConfig } from '@/lib/react-query';
 import { queryOptions, useQuery } from '@tanstack/react-query';
+import { budgetsApi } from '../lib/budgetsApi';
 
 export const getBudgetsQueryKey = () => ['budgets'];
 

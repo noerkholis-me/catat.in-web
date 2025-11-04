@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="id" suppressHydrationWarning className="dark scheme-dark">
       <body className={inter.className}>
         <QueryProvider>
-          <SessionMonitor />
+          {/* <SessionMonitor /> */}
           <Toaster
             position="top-center"
             toastOptions={{ duration: 4000 }}

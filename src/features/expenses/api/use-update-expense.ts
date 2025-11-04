@@ -1,39 +1,28 @@
 import { MutationConfig, queryClient } from '@/lib/react-query';
 import { useMutation } from '@tanstack/react-query';
 import { expensesApi } from '../lib/expensesApi';
+import { UpdateExpenseRequest } from '../types/expense';
 import { getExpensesQueryKey } from './use-get-expenses';
-import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/utils';
 
-type UseCreateExpenseParams = {
-  mutationConfig?: MutationConfig<typeof expensesApi.create>;
+type UseUpdateExpenseParams = {
+  mutationConfig?: MutationConfig<typeof expensesApi.update>;
+  expenseId: string;
 };
 
-export const useCreateExpense = (params: UseCreateExpenseParams = {}) => {
+export const useUpdateExpense = (params: UseUpdateExpenseParams) => {
   return useMutation({
     ...params.mutationConfig,
-    mutationFn: (data) => expensesApi.create(data),
+    mutationFn: (data) => expensesApi.update(data, params.expenseId),
     onSuccess: (data, variable, onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: getExpensesQueryKey() });
-
-      toast.success('Pengeluaran berhasil ditambahkan!', {
+      toast.success('Pengeluaran berhasil diperbarui!', {
         description: `${data.name} - ${formatCurrency(Number(data.amount))}`,
       });
 
       params.mutationConfig?.onSuccess?.(
         data,
-        variable,
-        onMutateResult,
-        context
-      );
-    },
-    onError: (error: any, variable, onMutateResult, context) => {
-      toast.error('Gagal menambahkan pengeluaran', {
-        description: error.response?.data?.message || 'Terjadi kesalahan',
-      });
-
-      params.mutationConfig?.onError?.(
-        error,
         variable,
         onMutateResult,
         context
